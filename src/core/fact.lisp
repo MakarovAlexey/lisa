@@ -155,15 +155,16 @@
 		   (logical-rule-p (active-rule)))
 	  (bind-logical-dependencies self))))
   (with-slots ((slot-table slot-table)
-               (meta-data meta-data)) self
+	       (meta-data meta-data)) self
     (setf meta-data (find-meta-fact (fact-name self)))
     (mapc #'(lambda (slot-name)
-              (setf (gethash slot-name slot-table) nil))
-          (get-slot-list meta-data))
+	      (setf (gethash slot-name slot-table) nil))
+	  (get-slot-list meta-data))
     (if (null instance)
-        (initialize-fact-from-template self slots meta-data)
-      (initialize-fact-from-instance self instance meta-data))
+	(initialize-fact-from-template self slots meta-data)
+	(initialize-fact-from-instance self instance meta-data))
     self))
+  
 
 (defun initialize-fact-from-template (fact slots meta-data)
   "Initializes a template-bound FACT. An instance of the FACT's associated
