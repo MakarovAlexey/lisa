@@ -101,6 +101,16 @@
              (defmacro slot-alloc (slot)
                `(mop::slot-definition-allocation ,slot))) ; xxx
 
+    (defun class-slot-list (class &optional (all t))
+      (unless (class-finalized-p class)
+        (finalize-inheritance class))
+      (let ((fact-slots (closer-mop:class-slots (find-class 'lisa:fact))))
+	(remove-if #'(lambda (slot)
+			   (and (or all (eq (slot-alloc slot) :instance))
+				(find (closer-mop:slot-definition-name slot)
+				      fact-slots :key #'closer-mop:slot-definition-name)))
+		       (class-slots1 class))))
+
     (defun class-slot-name-list (class &optional (all t))
       "Return the list of slots of a CLASS.
 CLASS can be a symbol, a class object (as returned by `class-of')
@@ -110,11 +120,9 @@ all slots are returned, otherwise only the slots with
 :allocation type :instance are returned."
       (unless (class-finalized-p class)
         (finalize-inheritance class))
-      (mapcan (if all (utils:compose list slot-name)
-		  (lambda (slot)
-		    (when (eq (slot-alloc slot) :instance)
-		      (list (slot-name slot)))))
-              (class-slots1 class)))
+      (mapcan #'(lambda (slot)
+		  (list (slot-name slot)))
+              (class-slot-list class all)))
     
     (defun class-slot-initargs (class &optional (all t))
       "Return the list of initargs of a CLASS.
@@ -123,11 +131,9 @@ or an instance of a class.
 If the second optional argument ALL is non-NIL (default),
 initargs for all slots are returned, otherwise only the slots with
 :allocation type :instance are returned."
-      (mapcan (if all (utils:compose list slot-one-initarg)
-		  (lambda (slot)
-		    (when (eq (slot-alloc slot) :instance)
-		      (list (slot-one-initarg slot)))))
-              (class-slots1 class)))))
+      (mapcan #'(lambda (slot)
+		  (list (slot-one-initarg slot)))
+              (class-slot-list class all)))))
 
 #+(or clisp cmu)
 (defun ensure-class (name &key (direct-superclasses '()))
