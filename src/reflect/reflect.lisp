@@ -39,7 +39,7 @@
                #+cormanlisp `(cl:class-slots ,class)
                #+lispworks `(hcl::class-slots ,class)
                #+lucid `(clos:class-slots ,class)
-               #+sbcl `(sb-pcl::class-slots ,class)
+               #+sbcl `(closer-mop::class-slots ,class)
                #+ccl `(ccl:class-slots ,class))
              (class-slots1 (obj)
                `(class-slots*
@@ -55,7 +55,7 @@
                #+cormanlisp `(getf ,slot :name)
                #+lispworks `(hcl::slot-definition-name ,slot)
                #+lucid `(clos:slot-definition-name ,slot)
-               #+sbcl `(slot-value ,slot 'sb-pcl::name)
+               #+sbcl `(closer-mop:slot-definition-name ,slot)
                #+ccl `(ccl:slot-definition-name ,slot))
              (slot-initargs (slot)
                #+(and allegro (not (version>= 6))) `(clos::slotd-initargs ,slot)
@@ -66,9 +66,10 @@
                #+cormanlisp `(getf ,slot :initargs)
                #+lispworks `(hcl::slot-definition-initargs ,slot)
                #+lucid `(clos:slot-definition-initargs ,slot)
-               #+sbcl `(slot-value ,slot 'sb-pcl::initargs)
+               #+sbcl `(closer-mop:slot-definition-initargs ,slot)
                #+ccl `(ccl:slot-definition-initargs ,slot))
-             (slot-one-initarg (slot) `(car (slot-initargs ,slot)))
+             (slot-one-initarg (slot)
+	       `(car (slot-initargs ,slot)))
              (slot-alloc (slot)
                #+(and allegro (not (version>= 6)))
                `(clos::slotd-allocation ,slot)
@@ -79,7 +80,7 @@
                #+cormanlisp `(getf ,slot :allocation)
                #+lispworks `(hcl::slot-definition-allocation ,slot)
                #+lucid `(clos:slot-definition-allocation ,slot)
-               #+sbcl `(sb-pcl::slot-definition-allocation ,slot)
+               #+sbcl `(closer-mop:slot-definition-allocation ,slot)
                #+ccl `(ccl:slot-definition-allocation ,slot)))
 
     #+abcl (progn
@@ -100,7 +101,7 @@
              (defmacro slot-alloc (slot)
                `(mop::slot-definition-allocation ,slot))) ; xxx
 
-    (defun class-slot-list (class &optional (all t))
+    (defun class-slot-name-list (class &optional (all t))
       "Return the list of slots of a CLASS.
 CLASS can be a symbol, a class object (as returned by `class-of')
 or an instance of a class.
@@ -110,11 +111,11 @@ all slots are returned, otherwise only the slots with
       (unless (class-finalized-p class)
         (finalize-inheritance class))
       (mapcan (if all (utils:compose list slot-name)
-                (lambda (slot)
-                  (when (eq (slot-alloc slot) :instance)
-                    (list (slot-name slot)))))
+		  (lambda (slot)
+		    (when (eq (slot-alloc slot) :instance)
+		      (list (slot-name slot)))))
               (class-slots1 class)))
-
+    
     (defun class-slot-initargs (class &optional (all t))
       "Return the list of initargs of a CLASS.
 CLASS can be a symbol, a class object (as returned by `class-of')
@@ -123,9 +124,9 @@ If the second optional argument ALL is non-NIL (default),
 initargs for all slots are returned, otherwise only the slots with
 :allocation type :instance are returned."
       (mapcan (if all (utils:compose list slot-one-initarg)
-                (lambda (slot)
-                  (when (eq (slot-alloc slot) :instance)
-                    (list (slot-one-initarg slot)))))
+		  (lambda (slot)
+		    (when (eq (slot-alloc slot) :instance)
+		      (list (slot-one-initarg slot)))))
               (class-slots1 class)))))
 
 #+(or clisp cmu)
