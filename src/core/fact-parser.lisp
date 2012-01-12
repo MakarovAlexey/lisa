@@ -58,11 +58,6 @@
    (inference-engine) fact 
    (make-dependency-set (active-tokens) (rule-logical-marker (active-rule))))
   fact)
-  
-(defun parse-and-insert-instance (instance &key (belief nil))
-  (let ((fact 
-         (make-fact-from-instance (class-name (class-of instance)) instance)))
-    (assert-fact (inference-engine) fact :belief belief)))
 
 (defun parse-and-retract-instance (instance engine)
   (retract-fact engine instance))
