@@ -57,7 +57,7 @@
                     (meta-data
                      (make-fact-meta-object
                       :class-name class-name
-                      :slot-list (reflect:class-slot-list class)
+                      :slot-list (reflect:class-slot-name-list class)
                       :superclasses all-superclasses))) ; new line (AM 9/19/03)
                (register-meta-object (inference-engine) class-name meta-data)
                meta-data))
@@ -76,7 +76,7 @@
 (defun import-class-specification (class-name)
   (labels ((import-class-object (class-object) ; defined this internal function
              (let ((class-symbols (list class-name)))
-               (dolist (slot-name (reflect:class-slot-list class-object))
+               (dolist (slot-name (reflect:class-slot-name-list class-object))
                  (push slot-name class-symbols))
                (import class-symbols)
                (when *consider-taxonomy-when-reasoning*
