@@ -41,6 +41,8 @@
   (:documentation
    "This class represents all facts in the knowledge base."))
 
+(defclass template-fact (fact) ())
+
 (defmethod equals ((fact-1 fact) (fact-2 fact))
   (and (eq (fact-name fact-1) (fact-name fact-2))
        (equalp (fact-slot-table fact-1) (fact-slot-table fact-2))))
@@ -193,7 +195,7 @@
 (defun make-fact (name &rest slots)
   "The default constructor for class FACT. NAME is the symbolic fact name as
   used in rules; SLOTS is a list of symbol/value pairs."
-  (make-instance 'fact :name name :slots slots))
+  (make-instance 'template-fact :name name :slots slots))
 
 (defun make-fact-from-instance (name clos-instance)
   "A constructor for class FACT that creates an instance bound to a
