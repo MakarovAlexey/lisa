@@ -44,6 +44,7 @@
     :maintainer "David E. Young"
     :licence "LGPL"
     :description "The Lisa expert system shell"
+    :depends-on ("closer-mop")
     :components
     ((:module src
               :components
