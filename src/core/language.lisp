@@ -96,10 +96,11 @@
                   `(,name)
                 `(',name))))
        (if (typep ,fact-object 'standard-object)
-           (parse-and-insert-instance ,fact-object :belief ,belief)
-	   (progn
-	     (let ((,fact (make-fact ',name ,@(expand-slots body))))
-	       (assert-fact (inference-engine) ,fact :belief ,belief)))))))
+           (let ((,fact 
+		  (make-fact-from-instance (class-name (class-of ,fact-object)) ,fact-object)))
+	     (assert-fact (inference-engine) ,fact :belief ,belief))
+	   (let ((,fact (make-fact ',name ,@(expand-slots body))))
+	     (assert-fact (inference-engine) ,fact :belief ,belief))))))
 
 (defmacro deffacts (name (&key &allow-other-keys) &body body)
   (parse-and-insert-deffacts name body))
@@ -111,7 +112,9 @@
   (active-rule))
 
 (defun assert-instance (instance)
-  (parse-and-insert-instance instance))
+  (assert-fact (inference-engine)
+	       (make-fact-from-instance (class-name (class-of instance)) instance)
+	       :belief nil))
 
 (defun retract-instance (instance)
   (parse-and-retract-instance instance (inference-engine)))
