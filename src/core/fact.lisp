@@ -145,6 +145,13 @@
   value. INSTANCE is the CLOS instance to be associated with this FACT; if
   INSTANCE is NIL then FACT is associated with a template and a suitable
   instance must be created; otherwise FACT is bound to a user-defined class."
+  (if (not (null instance))
+      (ensure-meta-data-exists (class-name (class-of instance)))
+      (progn
+	(ensure-meta-data-exists (fact-name self))
+	(when (and (in-rule-firing-p)
+		   (logical-rule-p (active-rule)))
+	  (bind-logical-dependencies self))))
   (with-slots ((slot-table slot-table)
                (meta-data meta-data)) self
     (setf meta-data (find-meta-fact (fact-name self)))

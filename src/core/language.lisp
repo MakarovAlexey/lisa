@@ -97,13 +97,9 @@
                 `(',name))))
        (if (typep ,fact-object 'standard-object)
            (parse-and-insert-instance ,fact-object :belief ,belief)
-         (progn
-           (ensure-meta-data-exists ',name)
-           (let ((,fact (make-fact ',name ,@(expand-slots body))))
-             (when (and (in-rule-firing-p)
-                        (logical-rule-p (active-rule)))
-               (bind-logical-dependencies ,fact))
-             (assert-fact (inference-engine) ,fact :belief ,belief)))))))
+	   (progn
+	     (let ((,fact (make-fact ',name ,@(expand-slots body))))
+	       (assert-fact (inference-engine) ,fact :belief ,belief)))))))
 
 (defmacro deffacts (name (&key &allow-other-keys) &body body)
   (parse-and-insert-deffacts name body))

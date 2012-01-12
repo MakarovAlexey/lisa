@@ -60,12 +60,8 @@
   fact)
   
 (defun parse-and-insert-instance (instance &key (belief nil))
-  (ensure-meta-data-exists (class-name (class-of instance)))
-  (let ((fact
+  (let ((fact 
          (make-fact-from-instance (class-name (class-of instance)) instance)))
-    (when (and (in-rule-firing-p)
-               (logical-rule-p (active-rule)))
-      (bind-logical-dependencies fact))
     (assert-fact (inference-engine) fact :belief belief)))
 
 (defun parse-and-retract-instance (instance engine)
