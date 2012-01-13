@@ -24,6 +24,16 @@
 
 (in-package :lisa)
 
+(defclass standard-kb-class (standard-class)
+  ((meta-data :reader fact-meta-data)))
+
+(defmethod validate-superclass ((class standard-kb-class)
+				(superclass standard-class)) t)
+
+(defmethod initialize-instance :after ((self standard-kb-class) &rest initargs)
+  (setf (slot-value self 'meta-data)
+	(ensure-meta-data-exists (class-name self))))
+
 (defclass fact ()
   ((name :initarg :name
          :reader fact-name)

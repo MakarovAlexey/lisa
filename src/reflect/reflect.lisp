@@ -118,8 +118,6 @@ or an instance of a class.
 If the second optional argument ALL is non-NIL (default),
 all slots are returned, otherwise only the slots with
 :allocation type :instance are returned."
-      (unless (class-finalized-p class)
-        (finalize-inheritance class))
       (mapcan #'(lambda (slot)
 		  (list (slot-name slot)))
               (class-slot-list class all)))

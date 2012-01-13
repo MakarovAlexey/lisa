@@ -34,7 +34,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defpackage "LISA"
-    (:use "COMMON-LISP")
+    (:use :closer-common-lisp)
     (:export
       "ASSERT"
       "DEFAULT"
@@ -126,12 +126,12 @@
     (:shadow "ASSERT"))
 
   (defpackage "LISA-USER"
-    (:use "COMMON-LISP")
+    (:use :closer-common-lisp)
     (:shadowing-import-from "LISA" "ASSERT" "DEFAULT")
     (:import-from "LISA" . #1#)))
 
 (defpackage "LISA.REFLECT"
-  (:use "COMMON-LISP")
+  (:use :closer-common-lisp)
   (:nicknames "REFLECT")
   #+(or Allegro LispWorks)
   (:import-from "CLOS"
@@ -144,10 +144,10 @@
   (:import-from "CLOS"
                 "CLASS-FINALIZED-P"
                 "FINALIZE-INHERITANCE")
-  #+:sbcl
-  (:import-from "SB-MOP"
-                "CLASS-FINALIZED-P"
-                "FINALIZE-INHERITANCE")
+  ;#+:sbcl
+  ;(:import-from "SB-MOP"
+  ;              "CLASS-FINALIZED-P"
+  ;              "FINALIZE-INHERITANCE")
   (:export
    "CLASS-ALL-SUPERCLASSES"
    "CLASS-FINALIZED-P"
@@ -157,7 +157,7 @@
    "FIND-DIRECT-SUPERCLASSES"))
 
 (defpackage "LISA.BELIEF"
-  (:use "COMMON-LISP")
+  (:use :closer-common-lisp)
   (:nicknames "BELIEF")
   (:export
    "ADJUST-BELIEF"
@@ -168,7 +168,7 @@
    "UKNOWN-P"))
 
 (defpackage "LISA.HEAP"
-  (:use "COMMON-LISP")
+  (:use :closer-common-lisp)
   (:nicknames "HEAP")
   (:export
    "CREATE-HEAP"
@@ -182,7 +182,7 @@
    "HEAP-REMOVE"))
    
 (defpackage "LISA.UTILS"
-  (:use "COMMON-LISP")
+  (:use :closer-common-lisp)
   (:nicknames "UTILS")
   (:export
    "COLLECT"
