@@ -51,7 +51,7 @@
 
 ;;; Corrected version courtesy of Aneil Mallavarapu...
 
-(defun acquire-meta-data (actual-name)
+(defun examine-class (class-object)
   (labels ((build-meta-object (class all-superclasses) ;  NEW LINE (AM 9/19/03)
              (let* ((class-name (class-name class))
                     (meta-data
@@ -60,16 +60,17 @@
                       :slot-list (reflect:class-slot-name-list class)
                       :superclasses all-superclasses))) ; new line (AM 9/19/03)
                (register-meta-object (inference-engine) class-name meta-data)
-               meta-data))
-           (examine-class (class-object)
-             (let ((superclasses
-                    (if *consider-taxonomy-when-reasoning*
-                        (reflect:class-all-superclasses class-object) ; NEW LINE (AM 9/19/03)
-                      nil)))
-               (build-meta-object class-object superclasses)
-               (dolist (super superclasses)
-                 (examine-class super)))))
-    (examine-class (find-class actual-name))))
+               meta-data)))
+    (let* ((superclasses
+	   (if *consider-taxonomy-when-reasoning*
+	       (reflect:class-all-superclasses class-object) ; NEW LINE (AM 9/19/03)
+	       nil))
+	   (metadata (build-meta-object class-object superclasses)))
+      (dolist (super superclasses metadata)
+	(examine-class super)))))
+
+(defun acquire-meta-data (actual-name)
+    (examine-class (find-class actual-name)))
 
 ;;; Corrected version courtesy of Aneil Mallavarapu...
 

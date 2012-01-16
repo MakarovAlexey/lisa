@@ -31,8 +31,14 @@
 				(superclass standard-class)) t)
 
 (defmethod initialize-instance :after ((self standard-kb-class) &rest initargs)
-  (setf (slot-value self 'meta-data)
-	(ensure-meta-data-exists (class-name self))))
+  (setf (slot-value self 'meta-data) (examine-class self)))
+
+(defmethod reinitialize-instance :after ((self standard-kb-class) &rest initargs)
+  (setf (slot-value self 'meta-data) (examine-class self)))
+
+;; создать класс для initial-fact - предположительно singletone
+;; добавить условие внесения смодельного ффакта
+;; избавиться от создания объектов-фактов (функции make-fact и init-from-template и init-from-instance
 
 (defclass fact ()
   ((name :initarg :name
@@ -50,6 +56,10 @@
    (meta-data :reader fact-meta-data))
   (:documentation
    "This class represents all facts in the knowledge base."))
+
+(finalize-inheritance (find-class 'fact))
+
+;; создать класс lisa-fact для определиния повеения
 
 (defclass template-fact (fact) ())
 
@@ -146,35 +156,53 @@
 (defun reconstruct-fact (fact)
   `(,(fact-name fact) ,@(get-slot-values fact)))
 
-(defmethod print-object ((self fact) strm)
+(defmethod print-object ((self template-fact) strm)
   (print-unreadable-object (self strm :type nil :identity t)
     (format strm "~A ; id ~D" (fact-name self) (fact-id self))))
 
-(defmethod initialize-instance :after ((self fact) &key (slots nil)
-                                                        (instance nil))
-  "Initializes a FACT instance. SLOTS is a list of slot name / value pairs,
-  where (FIRST SLOTS) is a symbol and (SECOND SLOT) is the slot's
-  value. INSTANCE is the CLOS instance to be associated with this FACT; if
-  INSTANCE is NIL then FACT is associated with a template and a suitable
-  instance must be created; otherwise FACT is bound to a user-defined class."
-  (if (not (null instance))
-      (ensure-meta-data-exists (class-name (class-of instance)))
-      (progn
-	(ensure-meta-data-exists (fact-name self))
-	(when (and (in-rule-firing-p)
-		   (logical-rule-p (active-rule)))
-	  (bind-logical-dependencies self))))
+(defgeneric init-fact (fact &key slots instance))
+
+(defmethod init-fact ((self fact) &key &allow-other-keys)
+  (with-slots ((name name)
+	       (clos-instance clos-instance)
+	       (slot-table slot-table)
+	       (meta-data meta-data)
+	       (shadows shadows)) self
+    (setf name (class-name (class-of self))
+	  clos-instance self
+	  shadows t
+	  meta-data (fact-meta-data (class-of self)))
+    (when (and (in-rule-firing-p)
+	       (logical-rule-p (active-rule)))
+      (bind-logical-dependencies self))
+    (mapc #'(lambda (slot-name)
+	      (set-slot-from-instance self self slot-name))
+	  (get-slot-list meta-data))))
+
+(defmethod init-fact ((self template-fact) &key (slots nil) (instance nil))
   (with-slots ((slot-table slot-table)
 	       (meta-data meta-data)) self
-    (setf meta-data (find-meta-fact (fact-name self)))
+    (setf meta-data (if (not (null instance))
+			(ensure-meta-data-exists (class-name (class-of instance)))
+			(ensure-meta-data-exists (fact-name self))))
+    (when (and (in-rule-firing-p)
+	       (logical-rule-p (active-rule)))
+      (bind-logical-dependencies self))
     (mapc #'(lambda (slot-name)
 	      (setf (gethash slot-name slot-table) nil))
 	  (get-slot-list meta-data))
     (if (null instance)
 	(initialize-fact-from-template self slots meta-data)
-	(initialize-fact-from-instance self instance meta-data))
-    self))
-  
+	(initialize-fact-from-instance self instance meta-data))))
+
+(defmethod initialize-instance :after ((self fact) &key (slots nil) (instance nil))
+  "Initializes a FACT instance. SLOTS is a list of slot name / value pairs,
+  where (FIRST SLOTS) is a symbol and (SECOND SLOT) is the slot's
+  value. INSTANCE is the CLOS instance to be associated with this FACT; if
+  INSTANCE is NIL then FACT is associated with a template and a suitable
+  instance must be created; otherwise FACT is bound to a user-defined class."
+  (init-fact self :slots slots :instance instance)
+  self)
 
 (defun initialize-fact-from-template (fact slots meta-data)
   "Initializes a template-bound FACT. An instance of the FACT's associated
@@ -212,7 +240,9 @@
   "A constructor for class FACT that creates an instance bound to a
   user-defined CLOS instance. NAME is the symbolic fact name; CLOS-INSTANCE is
   a user-supplied CLOS object."
-  (make-instance 'fact :name name :instance clos-instance))
+  (if (not (subclassp (class-of clos-instance) 'lisa:fact))
+      (make-instance 'template-fact :name name :instance clos-instance)
+      clos-instance))
   
 (defun make-fact-from-template (fact)
   "Creates a FACT instance using another FACT instance as a
